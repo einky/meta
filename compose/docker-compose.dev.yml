@@ -1,0 +1,62 @@
+# Local dev stack — brings up server + postgres + web with live-reload from
+# checked-out sibling repos. Run from the meta/ repo:
+#
+#   docker compose -f compose/docker-compose.dev.yml up
+#
+# Assumes ../server and ../web are present (run ./bootstrap.sh first).
+
+name: crab-ink-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crabink
+      POSTGRES_PASSWORD: crabink
+      POSTGRES_DB: crabink
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crabink -d crabink"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://crabink:crabink@postgres:5432/crabink
+      ENV: dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../server:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../web:/app
+      - /app/node_modules
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+volumes:
+  postgres-data:
