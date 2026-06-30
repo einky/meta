@@ -1,6 +1,8 @@
 # ADR 0002: Build the device OS with pi-gen
 
-- Status: Accepted
+- Status: **Superseded by [ADR 0007](0007-buildroot-os.md)** (2026-06-30). The
+  device OS is now built with Buildroot (`buildroot_os`); the `os/` pi-gen repo
+  is archived. Retained for historical context only.
 - Date: 2026-05-08
 
 ## Context

@@ -1,0 +1,122 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# einky — SHARED HARDWARE CONTRACT  (single source of truth)
+#
+# This file is the ONE authoritative definition of the device's panel geometry,
+# GPIO pin map, button bindings, and wire-protocol constants. Every repo that
+# needs these values MUST derive them from this file rather than hard-coding
+# them. See ./README.md for how each repo consumes it, and
+# ../adr/0008-shared-hardware-contract.md for the rationale.
+#
+# Consumers (generated constants are committed + CI-checked against this file):
+#   runtime/    src/input/keymap.py, src/spi_driver/spi_driver.h, frame constants
+#   buildroot_os/ board/inky/ overlays, the in-engine input_hook/eink_hook maps
+#   runtime/firmware/esp32/  include/config.h button + protocol constants
+#   docs/       docs/hardware/wiring.md (rendered from this table)
+#
+# DO NOT duplicate or fork these values. Bump here; downstream regenerates.
+# ─────────────────────────────────────────────────────────────────────────────
+
+schema_version = 1
+
+[panel]
+model         = "GDEM0397T81P"   # GooDisplay 3.97" e-ink
+width         = 800
+height        = 480
+bytes_per_row = 100              # width / 8
+frame_bytes   = 48000            # width * height / 8
+logic_voltage = 3.3
+bit_order     = "MSB"            # packed 1-bit, most-significant-bit first
+# Packing convention: the dither/pack step emits bit=1 for WHITE (numpy
+# packbits of (grey >= 128)). The panel/GxEPD drawBitmap treats bit=1 as the
+# drawn (black) foreground, so the SPI driver / firmware INVERT before drawing.
+packed_white_is_one = true
+
+[refresh]
+target_fps          = 2          # e-ink is slow; keep CPU + power low
+full_refresh_every  = 30         # frames between full refreshes (clears ghosting)
+
+# ── SPI display pins (Raspberry Pi BCM numbering) ────────────────────────────
+[spi]
+dev   = "/dev/spidev0.0"
+mosi  = 10                       # SPI0 MOSI  -> panel DIN
+sclk  = 11                       # SPI0 SCLK  -> panel CLK
+cs    = 8                        # SPI0 CE0   -> panel CS
+dc    = 25                       # data/command select
+rst   = 17                       # hardware reset
+busy  = 24                       # panel busy (active-high)
+
+# ── Buttons ──────────────────────────────────────────────────────────────────
+# `bcm` is the Raspberry Pi GPIO (hardware target / runtime GPIO handler).
+# `esp32` is the pin on the ESP32 dev bridge (see ../adr/0006).
+# `keysym` is injected on the X stack (xdotool / uinput); `renpy_events` are
+# queued directly by the in-engine input_hook (buildroot_os emulator path).
+# All buttons are active-low with internal pull-up; debounce 30 ms.
+active_low      = true
+pull            = "up"
+debounce_ms     = 30
+
+[[button]]
+name = "up"
+bcm = 5
+esp32 = 32
+keysym = "Up"
+renpy_events = ["focus_up"]
+
+[[button]]
+name = "down"
+bcm = 6
+esp32 = 33
+keysym = "Down"
+renpy_events = ["focus_down"]
+
+[[button]]
+name = "left"
+bcm = 13
+esp32 = 25
+keysym = "Left"
+renpy_events = ["focus_left"]
+
+[[button]]
+name = "right"
+bcm = 19
+esp32 = 26
+keysym = "Right"
+renpy_events = ["focus_right"]
+
+[[button]]
+name = "a"
+bcm = 16
+esp32 = 27
+keysym = "space"                 # advance dialogue
+renpy_events = ["dismiss"]
+
+[[button]]
+name = "b"
+bcm = 20
+esp32 = 14
+keysym = "Escape"                # back / menu
+renpy_events = ["game_menu"]
+
+[[button]]
+name = "start"
+bcm = 21
+esp32 = 12                       # NOTE: ESP32 strapping pin — see ../adr/0006
+keysym = "Return"                # confirm / select
+renpy_events = ["dismiss", "button_select", "bar_activate", "bar_deactivate"]
+
+# ── Wire protocols (full spec in ./protocol.md) ──────────────────────────────
+[protocol.frame]
+magic            = "EINK"        # 4 bytes, then u32 width LE, u32 height LE, then `frame_bytes`
+endianness       = "little"
+frame_tcp_port   = 5333          # runtime TcpFrameSink <- ESP32 dev bridge
+preview_socket   = "/tmp/einky-preview.sock"   # runtime SocketSink -> tools/preview.py
+
+[protocol.input]
+encoding         = "ascii-lines" # one button `name` per line, LF-terminated
+input_tcp_port   = 5334          # runtime NetInputHandler <- ESP32 dev bridge
+
+[protocol.engine_capture]
+# In-engine path (buildroot_os): config.eink_push_callback ships one PNG per
+# stable frame to a receiver, which dithers it into the [protocol.frame] format.
+eink_socket      = "/tmp/renpy-eink.sock"      # u32 length (big-endian) + PNG bytes
+input_socket     = "/tmp/renpy-input.sock"     # same ascii-lines as [protocol.input]

@@ -9,11 +9,12 @@ After bootstrapping, your workspace should look like:
 
 ```
 einky/                         # parent dir (name is up to you)
-├── meta/                      # ← you are here
+├── meta/                      # ← you are here  (bootstrap, ADRs, shared/ contract)
+│   └── shared/                # cross-repo source of truth (hardware.toml, protocol.md)
 ├── .github/                   # org-wide GitHub config, workflows, profile
 ├── docs/                      # human-readable design docs and guides
-├── os/                        # pi-gen-based Raspberry Pi OS image build
-├── runtime/                   # on-device Python runtime that launches games
+├── buildroot_os/             # InkyOS — Buildroot device image (replaces os/)
+├── runtime/                   # on-device frame/input pipeline (owns the shared logic)
 ├── launcher/                  # Ren'Py-based front-end / game picker
 ├── server/                    # FastAPI backend (game catalog, telemetry)
 ├── web/                       # web frontend (admin / store / management)
@@ -23,24 +24,25 @@ einky/                         # parent dir (name is up to you)
 
 | Repo | Purpose | Link |
 |---|---|---|
-| [meta](https://github.com/Crab-Ink-Gaming/meta) | Workspace bootstrap, ADRs, shared scripts | this repo |
+| [meta](https://github.com/Crab-Ink-Gaming/meta) | Workspace bootstrap, ADRs, `shared/` contract, shared scripts | this repo |
 | [.github](https://github.com/Crab-Ink-Gaming/.github) | Org profile, shared workflows, issue templates | [→](https://github.com/Crab-Ink-Gaming/.github) |
 | [docs](https://github.com/Crab-Ink-Gaming/docs) | Architecture docs, onboarding, guides | [→](https://github.com/Crab-Ink-Gaming/docs) |
-| [os](https://github.com/Crab-Ink-Gaming/os) | pi-gen recipe producing the device OS image | [→](https://github.com/Crab-Ink-Gaming/os) |
-| [runtime](https://github.com/Crab-Ink-Gaming/runtime) | On-device service that runs the launcher and games | [→](https://github.com/Crab-Ink-Gaming/runtime) |
+| [buildroot_os](https://github.com/Crab-Ink-Gaming/buildroot_os) | **InkyOS** — Buildroot device image (boots to game) | [→](https://github.com/Crab-Ink-Gaming/buildroot_os) |
+| [runtime](https://github.com/Crab-Ink-Gaming/runtime) | Frame pipeline + input + SPI driver + ESP32 dev bridge (canonical owner) | [→](https://github.com/Crab-Ink-Gaming/runtime) |
 | [launcher](https://github.com/Crab-Ink-Gaming/launcher) | Ren'Py game selector shown at boot | [→](https://github.com/Crab-Ink-Gaming/launcher) |
 | [server](https://github.com/Crab-Ink-Gaming/server) | FastAPI backend | [→](https://github.com/Crab-Ink-Gaming/server) |
 | [web](https://github.com/Crab-Ink-Gaming/web) | Web frontend | [→](https://github.com/Crab-Ink-Gaming/web) |
 | [case](https://github.com/Crab-Ink-Gaming/case) | Enclosure / hardware design | [→](https://github.com/Crab-Ink-Gaming/case) |
 | [games](https://github.com/Crab-Ink-Gaming/games) | Ren'Py game sources | [→](https://github.com/Crab-Ink-Gaming/games) |
+| ~~os~~ | **Archived** — pi-gen image build, replaced by `buildroot_os` ([ADR 0007](./adr/0007-buildroot-os.md)) | — |
 
 ## Prerequisites
 
 - `git` (≥ 2.30)
 - `bash` (≥ 4)
 - `curl`, `tar`, `sha256sum`
-- `docker` and `docker compose` (for the local dev stack)
-- `python` 3.11 (see `versions.env`)
+- `docker` and `docker compose` (for the local dev stack and the `buildroot_os` build)
+- `python` 3.14 (see `versions.env`)
 - An SSH key registered with GitHub, if you plan to use `--ssh`
 
 ## Bootstrap workflow
@@ -54,12 +56,34 @@ cd meta
 
 The script clones each sibling repo into `..` next to `meta/`. It is
 idempotent — already-cloned repos are skipped — and prints a summary of what
-was cloned, skipped, or failed.
+was cloned, skipped, or failed. (`buildroot_os` vendors Buildroot as a
+submodule — after cloning it, run `git -C ../buildroot_os submodule update
+--init --recursive`.)
+
+## Shared contract (`shared/`)
+
+[`shared/`](./shared/) is the cross-repo source of truth for everything that was
+previously duplicated across repos: panel geometry, the GPIO/SPI pin map, the
+button→key/event bindings, and the wire protocols
+([`shared/hardware.toml`](./shared/hardware.toml),
+[`shared/protocol.md`](./shared/protocol.md)). Repos derive their constants from
+it — they do not fork these values. See
+[ADR 0008](./adr/0008-shared-hardware-contract.md).
 
 ## Cross-repo pinned versions
 
-All shared version pins live in [`versions.env`](./versions.env). Other repos
-source this file (or symlink to it) so a single bump propagates everywhere.
+All shared version pins live in [`versions.env`](./versions.env) — the single
+source of truth. Other repos source this file (or symlink to it) so a single
+bump propagates everywhere; `buildroot_os` mirrors the engine/toolchain pins in
+its Buildroot packages under a CI parity check.
+
+## Installing the Ren'Py SDK (dev workstations)
+
+```bash
+./scripts/install-renpy-sdk.sh ~/renpy   # pinned version + SHA256 from versions.env
+```
+
+This is the **one** SDK installer (ADR 0004). `runtime/scripts/` symlinks it.
 
 ## Local dev stack
 

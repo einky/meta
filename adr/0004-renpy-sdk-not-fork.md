@@ -1,6 +1,8 @@
 # ADR 0004: Use the upstream Ren'Py SDK, do not fork it
 
-- Status: Accepted
+- Status: Accepted, **amended by [ADR 0007](0007-buildroot-os.md)** (2026-06-30):
+  on-device, `buildroot_os` builds the engine from the upstream source tarball
+  and carries one small e-ink patch. Dev workstations still use the vanilla SDK.
 - Date: 2026-05-08
 
 ## Context
