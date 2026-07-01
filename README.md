@@ -1,6 +1,6 @@
 # meta
 
-Dev-workspace entry point for **Crab-Ink-Gaming**. Clone this repo first, then
+Dev-workspace entry point for **einky**. Clone this repo first, then
 run `./bootstrap.sh` to clone every other org repo as a sibling directory.
 
 ## Repo layout
@@ -24,16 +24,16 @@ einky/                         # parent dir (name is up to you)
 
 | Repo | Purpose | Link |
 |---|---|---|
-| [meta](https://github.com/Crab-Ink-Gaming/meta) | Workspace bootstrap, ADRs, `shared/` contract, shared scripts | this repo |
-| [.github](https://github.com/Crab-Ink-Gaming/.github) | Org profile, shared workflows, issue templates | [→](https://github.com/Crab-Ink-Gaming/.github) |
-| [docs](https://github.com/Crab-Ink-Gaming/docs) | Architecture docs, onboarding, guides | [→](https://github.com/Crab-Ink-Gaming/docs) |
-| [buildroot_os](https://github.com/Crab-Ink-Gaming/buildroot_os) | **InkyOS** — Buildroot device image (boots to game) | [→](https://github.com/Crab-Ink-Gaming/buildroot_os) |
-| [runtime](https://github.com/Crab-Ink-Gaming/runtime) | Frame pipeline + input + SPI driver + ESP32 dev bridge (canonical owner) | [→](https://github.com/Crab-Ink-Gaming/runtime) |
-| [launcher](https://github.com/Crab-Ink-Gaming/launcher) | Ren'Py game selector shown at boot | [→](https://github.com/Crab-Ink-Gaming/launcher) |
-| [server](https://github.com/Crab-Ink-Gaming/server) | FastAPI backend | [→](https://github.com/Crab-Ink-Gaming/server) |
-| [web](https://github.com/Crab-Ink-Gaming/web) | Web frontend | [→](https://github.com/Crab-Ink-Gaming/web) |
-| [case](https://github.com/Crab-Ink-Gaming/case) | Enclosure / hardware design | [→](https://github.com/Crab-Ink-Gaming/case) |
-| [games](https://github.com/Crab-Ink-Gaming/games) | Ren'Py game sources | [→](https://github.com/Crab-Ink-Gaming/games) |
+| [meta](https://github.com/einky/meta) | Workspace bootstrap, ADRs, `shared/` contract, shared scripts | this repo |
+| [.github](https://github.com/einky/.github) | Org profile, shared workflows, issue templates | [→](https://github.com/einky/.github) |
+| [docs](https://github.com/einky/docs) | Architecture docs, onboarding, guides | [→](https://github.com/einky/docs) |
+| [buildroot_os](https://github.com/einky/buildroot_os) | **InkyOS** — Buildroot device image (boots to game) | [→](https://github.com/einky/buildroot_os) |
+| [runtime](https://github.com/einky/runtime) | Frame pipeline + input + SPI driver + ESP32 dev bridge (canonical owner) | [→](https://github.com/einky/runtime) |
+| [launcher](https://github.com/einky/launcher) | Ren'Py game selector shown at boot | [→](https://github.com/einky/launcher) |
+| [server](https://github.com/einky/server) | FastAPI backend | [→](https://github.com/einky/server) |
+| [web](https://github.com/einky/web) | Web frontend | [→](https://github.com/einky/web) |
+| [case](https://github.com/einky/case) | Enclosure / hardware design | [→](https://github.com/einky/case) |
+| [games](https://github.com/einky/games) | Ren'Py game sources | [→](https://github.com/einky/games) |
 | ~~os~~ | **Archived** — pi-gen image build, replaced by `buildroot_os` ([ADR 0007](./adr/0007-buildroot-os.md)) | — |
 
 ## Prerequisites
@@ -48,7 +48,7 @@ einky/                         # parent dir (name is up to you)
 ## Bootstrap workflow
 
 ```bash
-git clone https://github.com/Crab-Ink-Gaming/meta.git
+git clone https://github.com/einky/meta.git
 cd meta
 ./bootstrap.sh                # https (default)
 ./bootstrap.sh --ssh          # ssh remotes instead

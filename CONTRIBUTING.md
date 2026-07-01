@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for working on Crab-Ink-Gaming. These conventions apply to every repo
+Thanks for working on Einky. These conventions apply to every repo
 in the org unless that repo's own `CONTRIBUTING.md` overrides them.
 
 ## Branches
