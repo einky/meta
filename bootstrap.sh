@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ORG="Crab-Ink-Gaming"
+ORG="einky"
 # Active repos. `os` (pi-gen) is archived and intentionally omitted — the device
 # OS is now `buildroot_os` (Buildroot/InkyOS). See adr/0007-buildroot-os.md.
 REPOS=(.github docs buildroot_os runtime launcher server web case games)
 
-PROTO="https"
+PROTO="ssh"
 for arg in "$@"; do
     case "$arg" in
         --ssh)   PROTO="ssh" ;;
