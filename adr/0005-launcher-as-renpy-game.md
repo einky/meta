@@ -1,6 +1,6 @@
 # ADR 0005: The launcher is itself a Ren'Py game
 
-- Status: Accepted
+- Status: Superseded by [ADR 0009](0009-native-python-launcher.md)
 - Date: 2026-05-08
 
 ## Context
